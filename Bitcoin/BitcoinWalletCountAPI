@@ -1,0 +1,9 @@
+# It uses Blockchair API
+
+import requests
+
+url = "https://api.blockchair.com/bitcoin/stats"
+response = requests.get(url)
+data = response.json()
+active_addresses = data['data']['addresses']
+print("Bitcoin'deki aktif adres sayısı:", active_addresses)
