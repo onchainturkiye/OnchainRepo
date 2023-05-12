@@ -1,0 +1,29 @@
+# It counts all unique addresses from genesis block.
+
+import requests
+from bitcoin.rpc import RawProxy
+
+def get_active_address_count():
+    proxy = RawProxy()
+
+    blockchain_info = proxy.getblockchaininfo()
+    block_height = blockchain_info["blocks"]
+
+    unique_addresses = set()
+    for i in range(1, block_height + 1):
+        block_hash = proxy.getblockhash(i)
+        block = proxy.getblock(block_hash)
+        transactions = block["tx"]
+        for txid in transactions:
+            transaction = proxy.getrawtransaction(txid, True)
+            vout = transaction["vout"]
+            for output in vout:
+                if "addresses" in output["scriptPubKey"]:
+                    addresses = output["scriptPubKey"]["addresses"]
+                    for address in addresses:
+                        unique_addresses.add(address)
+
+    return len(unique_addresses)
+
+active_address_count = get_active_address_count()
+print("Bitcoin'deki aktif adres sayısı:", active_address_count)
