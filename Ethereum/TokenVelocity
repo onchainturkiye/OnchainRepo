@@ -1,0 +1,51 @@
+from web3 import Web3
+
+YOUR_INFURA_API = ""
+w3 = Web3(Web3.HTTPProvider(f'https://mainnet.infura.io/v3/{YOUR_INFURA_API}'))
+
+token_address = ""
+token_symbol = ""
+YOUR_TOKEN_ABI = ""
+
+def calculate_velocity():
+    # Ethereum'da ortalama blok süresi 15 saniye olduğu için 24 saatteki blok sayısı 5760'tır.
+    # Limit yeterse blocks per day'i 5760 yaparak en doğru sonuca ulaşılabilir.
+    # Query limitine takılanlar için blocks per day'i 500 yapıp 11 ile çarpacağım ve ortalama bir değer bulacağım.
+    blocks_per_day = 500
+    latest_block_number = w3.eth.block_number
+    start_block = max(0, latest_block_number - blocks_per_day)
+
+    transfer_events = w3.eth.get_logs({
+        'fromBlock': start_block,
+        'toBlock': latest_block_number,
+        'address': token_address,
+        'topics': [Web3.keccak(text="Transfer(address,address,uint256)").hex()]
+    })
+
+    total_token_volume = 0
+
+    for event in transfer_events:
+        data = event['data'].hex()
+
+        token_amount = int(data, 16)
+
+        total_token_volume += token_amount
+
+    # Query limitine takılanlar için blocks per day'i 500 yapmıştık şimdi 11 ile çarpıyoruz total token volume'u
+    total_token_volume = total_token_volume * 11
+
+    contract = w3.eth.contract(address=token_address, abi=YOUR_TOKEN_ABI)
+    total_token_supply = contract.functions.totalSupply().call()
+
+    # Velocity hesaplaması
+    #total_token_volume değeri total_token_supply değerine oranlanır ve günlük işlem sayısı ile çarpılır.
+    #Transfer edilen token miktarının toplam token arzına oranla normalleştirildiği ve günlük işlem sayısıyla çarpıldığı anlamına gelir.
+    #Böylece, tokenin belirli bir süre içindeki hareketliliğini temsil eden bir oran elde edilir.
+    velocity = total_token_volume / total_token_supply * 5760
+
+    return velocity
+
+
+# Hesaplama sonucunu görüntüleme
+velocity_value = calculate_velocity()
+print(f"{token_symbol} tokenının Velocity değeri: {velocity_value}")
