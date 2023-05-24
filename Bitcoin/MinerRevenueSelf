@@ -1,0 +1,20 @@
+from bitcoin.rpc import RawProxy
+
+def calculate_mining_revenue():
+    try:
+        proxy = RawProxy()
+
+        block_height = proxy.getblockcount()
+        last_block_hash = proxy.getblockhash(block_height)
+        last_block = proxy.getblock(last_block_hash)
+        block_reward = last_block["tx"][0]["vout"][0]["value"]
+        
+        return block_reward
+    except Exception as e:
+        print("Hata: Bağlantı hatası veya veri alınamadı:", e)
+        return None
+
+mining_revenue = calculate_mining_revenue()
+
+if mining_revenue is not None:
+    print("Bitcoin Madencilik Geliri:", mining_revenue, "BTC")
