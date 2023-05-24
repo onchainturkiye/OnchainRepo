@@ -1,0 +1,10 @@
+import requests
+
+def get_mining_revenue():
+    response = requests.get("https://api.blockchain.info/stats")
+    data = response.json()
+    mining_revenue = data["mining_revenue_btc"]
+    return mining_revenue
+
+mining_revenue = get_mining_revenue()
+print("Bitcoin Madencilik Geliri:", mining_revenue, "BTC")
