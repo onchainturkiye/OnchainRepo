@@ -1,0 +1,23 @@
+from web3 import Web3
+
+rpc_endpoint = 'https://mainnet.infura.io/v3/YOUR_INFURA_PROJECT_ID'
+
+web3 = Web3(Web3.HTTPProvider(rpc_endpoint))
+
+latest_block_number = web3.eth.block_number
+
+time_window = 24 * 60 * 60  # Saniye cinsinden süre
+current_block_number = latest_block_number - time_window // 15 
+
+active_addresses = set()
+
+for block_number in range(current_block_number, latest_block_number + 1):
+    block = web3.eth.get_block(block_number)
+    for tx in block.transactions:
+        tx_receipt = web3.eth.get_transaction_receipt(tx.hex())
+        if tx_receipt and tx_receipt.logs:
+            for log in tx_receipt.logs:
+                if log.address == 'YOUR_CONTRACT_ADDRESS': 
+                    active_addresses.add(log.address)
+
+print("Günlük Aktif Kullanıcı Sayısı:", len(active_addresses))
